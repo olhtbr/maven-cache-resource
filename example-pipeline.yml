@@ -1,0 +1,82 @@
+# Declare the maven cache resource type
+resource_types:
+  - name: maven-cache
+    type: docker-image
+    source:
+      repository: olhtbr/maven-cache-resource
+      tag: latest
+
+resources:
+  # Maven project source code repo
+  - name: maven-repo
+    type: git
+    source: &maven-repo
+      uri: https://github.com/apache/maven
+
+  # Resource cahching Maven dependencies of the maven-repo resource
+  - name: maven-cache
+    type: maven-cache # Defined in resource_types
+    source:
+      <<: *maven-repo # We want to cache dependencies of the maven-repo,
+      paths:          # but interested only in the pom.xml, which declares dependencies
+        - pom.xml
+
+jobs:
+  # Execute unit tests
+  - name: unit
+    plan:
+      - get: maven-repo
+        trigger: true
+      - get: maven-cache  # Don't trigger on changes to the cache
+      - task: unit
+        config:
+          platform: linux
+          image_resource: &maven-image
+            type: docker-image
+            source:
+              repository: maven
+              tag: alpine
+          inputs:
+            - name: maven-repo
+            - name: maven-cache
+          run:
+            dir: maven-repo
+            path: sh
+            args:
+              - -exc
+              - |
+                # Maven uses ~/.m2/repository for caching by default,
+                # so symlink our cache resource there.
+                ln -s `pwd`/../maven-cache ~/.m2/repository
+                
+                # Run our unit tests
+                mvn -B clean test
+
+  # Deploy artifact
+  - name: deploy
+    plan:
+      - get: maven-repo
+        passed: [unit]
+        trigger: true
+      - get: maven-cache
+        passed: [unit] # Not strictly necessary, but makes the layout in the UI cleaner
+      - task: deploy
+        config:
+          platform: linux
+          image_resource:
+            <<: *maven-image
+          inputs:
+            - name: maven-repo
+            - name: maven-cache
+          run:
+            dir: maven-repo
+            path: sh
+            args:
+              - -exc
+              - |
+                # Maven uses ~/.m2/repository for caching by default,
+                # so symlink our cache resource there.
+                ln -s `pwd`/../maven-cache ~/.m2/repository
+
+                # Deploy the previously unit tested artifact
+                mvn -B -DskipTests=true deploy
