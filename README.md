@@ -23,3 +23,5 @@ with `mvn dependency:resolve`.
 
 ## Usage
 An example usage is documented in `example-pipeline.yml`.
+
+Docker image is available on [Docker Hub](https://hub.docker.com/r/olhtbr/maven-cache-resource).
