@@ -13,4 +13,4 @@ cd "$GIT_DEST_DIR"
 
 MAVEN_REPO=$DEST_DIR mvn -B dependency:resolve >&2
 
-echo Downloaded $(du -hs $DEST_DIR | cut -f1) in $(find $DEST_DIR -type f | wc -l) files.
+echo Downloaded $(du -hs $DEST_DIR | cut -f1) in $(find $DEST_DIR -type f | wc -l) files. >&2

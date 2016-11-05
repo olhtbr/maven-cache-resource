@@ -12,6 +12,7 @@ resources:
     type: git
     source: &maven-repo
       uri: https://github.com/apache/maven
+      # Of course you'll need some github credentials here
 
   # Resource cahching Maven dependencies of the maven-repo resource
   - name: maven-cache
