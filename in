@@ -1,0 +1,16 @@
+#!/bin/bash -eu
+set -o pipefail
+
+DEST_DIR="$1"
+
+GIT_DEST_DIR="$(mktemp -d -t git-resource-destination.XXXXXX)"
+
+/opt/resource/git/in "$GIT_DEST_DIR"
+
+cd "$GIT_DEST_DIR"
+
+[[ -f pom.xml ]] || { echo "There is no pom.xml in the git repo." >&2; exit 1; }
+
+MAVEN_REPO=$DEST_DIR mvn -B dependency:resolve >&2
+
+echo Downloaded $(du -hs $DEST_DIR | cut -f1) in $(find $DEST_DIR -type f | wc -l) files.
