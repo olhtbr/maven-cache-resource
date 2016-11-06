@@ -11,6 +11,6 @@ cd "$GIT_DEST_DIR"
 
 [[ -f pom.xml ]] || { echo "There is no pom.xml in the git repo." >&2; exit 1; }
 
-MAVEN_REPO=$DEST_DIR mvn -B dependency:resolve >&2
+MAVEN_REPO=$DEST_DIR mvn -B --fail-never dependency:go-offline >&2
 
 echo Downloaded $(du -hs $DEST_DIR | cut -f1) in $(find $DEST_DIR -type f | wc -l) files. >&2
