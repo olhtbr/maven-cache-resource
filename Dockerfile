@@ -2,7 +2,7 @@ FROM maven:3.3.9-jdk-8-alpine
 MAINTAINER olhtbr@gmail.com
 
 RUN apk update && \
-    apk add git jq wget unzip && \
+    apk add git jq wget unzip openssh-client && \
     git config --global user.email "git@localhost" && \
     git config --global user.name "git" && \
     mkdir -p /opt/resource/git && \
