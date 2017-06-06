@@ -10,9 +10,11 @@ script:
   - docker build -t olhtbr/maven-cache-resource:latest .
 
 after_success:
-  - if [ "$TRAVIS_BRANCH" == "master" ]; then
+  - if [ "x$TRAVIS_TAG" != "x" ]; then
       docker login -e="$DOCKER_EMAIL" -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
       docker push olhtbr/maven-cache-resource:latest;
+      docker tag olhtbr/maven-cache-resource:latest olhtbr/maven-cache-resource:$TRAVIS_TAG;
+      docker push olhtbr/maven-cache-resource:$TRAVIS_TAG;
     fi
 
 deploy:
@@ -23,9 +25,3 @@ deploy:
   on:
     repo: olhtbr/maven-cache-resource
     tags: true
-
-after_deploy:
-  - if [ "x$TRAVIS_TAG" != "x" ]; then
-      docker tag olhtbr/maven-cache-resource:latest olhtbr/maven-cache-resource:$TRAVIS_TAG;
-      docker push olhtbr/maven-cache-resource:$TRAVIS_TAG;
-    fi
