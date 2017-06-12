@@ -17,3 +17,6 @@ ADD settings.xml /usr/share/maven/conf/
 ADD check in out /opt/resource/
 
 ENV MAVEN_REPO /root/.m2/repository
+
+# Disable parent image entrypoint as it copies only a reference config
+ENTRYPOINT [""]
