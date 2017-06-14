@@ -1,16 +1,41 @@
-#!/bin/bash -eu
-set -o pipefail
+#!/usr/bin/env bash
+set -euo pipefail
 
-DEST_DIR="$1"
+exec 3>&1 # make stdout available as fd 3 for the result
+exec 1>&2 # redirect all output to stderr for logging
 
-GIT_DEST_DIR="$(mktemp -d -t git-resource-destination.XXXXXX)"
+destination=$1
+if [ -z "$destination" ]; then
+  echo "usage: $0 <path/to/destination>"
+  exit 1
+fi
 
-/opt/resource/git/in "$GIT_DEST_DIR"
+payload=$(mktemp /tmp/maven-cache-resource-in.XXXXXX)
+cat > $payload <&0
 
-cd "$GIT_DEST_DIR"
+# Parse URLs for settings.xml and settings-security.xml
+settings_url=$(jq -r '.source.settings.url // ""' < $payload)
+master_password=$(jq -r '.source."master-password" // ""' < $payload)
 
-[[ -f pom.xml ]] || { echo "There is no pom.xml in the git repo." >&2; exit 1; }
+# Download settings.xml file if specified
+if [[ -n "$settings_url" ]]; then
+  wget -q -t 3 -T 60 -O '/usr/share/maven/conf/settings.xml' "$settings_url"
+fi
 
-MAVEN_REPO=$DEST_DIR mvn -B --fail-never dependency:go-offline >&2
+# Write master password to settings-security.xml if specified
+if [[ -n "$master_password" ]]; then
+  mkdir -p /root/.m2/
+  echo "<settingsSecurity><master>$master_password</master></settingsSecurity>" > /root/.m2/settings-security.xml
+fi
 
-echo Downloaded $(du -hs $DEST_DIR | cut -f1) in $(find $DEST_DIR -type f | wc -l) files. >&2
+# Forward request to the git resource to clone the source git repo
+git_dir="$(mktemp -d -t git-resource-destination.XXXXXX)"
+/opt/resource/git/in "$git_dir" < $payload >&3
+
+# Check for pom.xml
+cd "$git_dir"
+[[ -f pom.xml ]] || { echo "There is no pom.xml in the git repo."; exit 1; }
+
+# Use maven dependency plugin to cache dependencies
+mvn -Dmaven.repo.local="$destination" -B --fail-never dependency:go-offline -DexcludeReactor=false
+echo Downloaded $(du -hs $destination | cut -f1) in $(find $destination -type f | wc -l) files.

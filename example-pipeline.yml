@@ -21,6 +21,11 @@ resources:
       <<: *maven-repo # We want to cache dependencies of the maven-repo,
       paths:          # but interested only in the pom.xml, which declares dependencies
         - pom.xml
+      settings:
+        # Custom Maven settings.xml URL
+        url: http://example.com/settings.xml
+      # Encrypted Maven master password
+      master-password: {encryptedmavenmasterpassword}
 
 jobs:
   # Execute unit tests
@@ -46,12 +51,9 @@ jobs:
             args:
               - -exc
               - |
-                # Maven uses ~/.m2/repository for caching by default,
-                # so symlink our cache resource there.
-                ln -s `pwd`/../maven-cache ~/.m2/repository
-                
-                # Run our unit tests
-                mvn -B clean test
+                # Run our unit tests. Make sure to use the cached folder as
+                # the local maven repo.
+                mvn -Dmaven.repo.local=../maven-cache -B clean test
 
   # Deploy artifact
   - name: deploy
@@ -75,9 +77,6 @@ jobs:
             args:
               - -exc
               - |
-                # Maven uses ~/.m2/repository for caching by default,
-                # so symlink our cache resource there.
-                ln -s `pwd`/../maven-cache ~/.m2/repository
-
-                # Deploy the previously unit tested artifact
-                mvn -B -DskipTests=true deploy
+                # Deploy the previously unit tested artifact. Make sure to use
+                # the cached folder as the local maven repo.
+                mvn -Dmaven.repo.local=../maven-cache -B -DskipTests=true deploy
