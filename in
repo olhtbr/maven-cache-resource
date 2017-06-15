@@ -20,6 +20,7 @@ master_password=$(jq -r '.source."master-password" // ""' < $payload)
 # Download settings.xml file if specified
 if [[ -n "$settings_url" ]]; then
   wget -q -t 3 -T 60 -O '/usr/share/maven/conf/settings.xml' "$settings_url"
+  cp -f /usr/share/maven/conf/settings.xml "$destination/settings.xml"
 fi
 
 # Write master password to settings-security.xml if specified

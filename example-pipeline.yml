@@ -52,8 +52,8 @@ jobs:
               - -exc
               - |
                 # Run our unit tests. Make sure to use the cached folder as
-                # the local maven repo.
-                mvn -Dmaven.repo.local=../maven-cache -B clean test
+                # the local maven repo. We also use the exposed settings.xml.
+                mvn -Dmaven.repo.local=../maven-cache -gs ../maven-cache/settings.xml -B clean test
 
   # Deploy artifact
   - name: deploy
@@ -78,5 +78,5 @@ jobs:
               - -exc
               - |
                 # Deploy the previously unit tested artifact. Make sure to use
-                # the cached folder as the local maven repo.
-                mvn -Dmaven.repo.local=../maven-cache -B -DskipTests=true deploy
+                # the cached folder as the local maven repo. We also use the exposed settings.xml.
+                mvn -Dmaven.repo.local=../maven-cache -gs ../maven-cache/settings.xml -B -DskipTests=true deploy
