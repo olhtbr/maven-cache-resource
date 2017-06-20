@@ -24,7 +24,7 @@ It is advisable to track changes to the `pom.xml` only, since that describes the
 The source repository is first cloned using the git-resource and then dependencies are cached
 with `mvn dependency:go-offline`.
 
-If `settings.url` is specified in the source configuration, the downloaded settings.xml
+If `settings.url` is specified in the source configuration, the downloaded `settings.xml`
 file is going to be available in the resource's root folder, so it can be referenced
 in tasks, which use the resource as an input (see `example-pipeline.yml`).
 
